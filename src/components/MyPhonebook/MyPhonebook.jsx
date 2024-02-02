@@ -6,43 +6,53 @@ import PhonebookList from './PhonebookList/PhonebookList';
 
 class MyPhonebook extends Component {
   state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
+    contacts: [],
     filter: '',
   };
 
-  addContacts = data => {
+  componentDidMount() {
+    const storedContacts = localStorage.getItem('my-contacts');
+    if (storedContacts) {
+      this.setState({ contacts: JSON.parse(storedContacts) });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { contacts } = this.state;
+    if (prevState.contacts !== contacts) {
+      localStorage.setItem('my-contacts', JSON.stringify(contacts));
+    }
+  }
+
+  isDuplicate({ name, number }) {
+    const { contacts } = this.state;
+    return contacts.some(
+      contact =>
+        contact.name.toLowerCase() === name.toLowerCase() &&
+        contact.number.toLowerCase() === number.toLowerCase()
+    );
+  }
+
+  addContact = data => {
     if (this.isDuplicate(data)) {
       return alert(
-        `Contact with ${data.name} and ${data.number} already in list`
+        `Contact with ${data.name} and ${data.number} already in the list`
       );
     }
 
-    const newContact = { id: nanoid(), ...data };
-    this.setState(({ contacts }) => ({
-      contacts: [...contacts, newContact],
+    this.setState(prevState => ({
+      contacts: [...prevState.contacts, { id: nanoid(), ...data }],
     }));
   };
 
-  deleteContacts = id => {
-    this.setState(({ contacts }) => ({
-      contacts: contacts.filter(item => item.id !== id),
+  deleteContact = id => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== id),
     }));
   };
 
   changeFilter = e => {
     this.setState({ filter: e.target.value });
-  };
-
-  isDuplicate = ({ name }) => {
-    const { contacts } = this.state;
-    return contacts.some(
-      item => item.name.toLowerCase() === name.toLowerCase()
-    );
   };
 
   getFilteredContacts = () => {
@@ -57,21 +67,17 @@ class MyPhonebook extends Component {
 
   render() {
     const contacts = this.getFilteredContacts();
+
     return (
       <Container>
         <h2>Phonebook</h2>
-        <PhonebookForm onSubmit={this.addContacts} />
-        <div>
-          <input
-            onChange={this.changeFilter}
-            name="filter"
-            placeholder="Search"
-          />
-          <PhonebookList
-            items={contacts}
-            deleteContacts={this.deleteContacts}
-          />
-        </div>
+        <PhonebookForm onSubmit={this.addContact} />
+        <input
+          onChange={this.changeFilter}
+          name="filter"
+          placeholder="Search"
+        />
+        <PhonebookList items={contacts} deleteContact={this.deleteContact} />
       </Container>
     );
   }
