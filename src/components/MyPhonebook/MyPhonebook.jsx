@@ -28,16 +28,17 @@ class MyPhonebook extends Component {
     const { contacts } = this.state;
     return contacts.some(
       contact =>
-        contact.name.toLowerCase() === name.toLowerCase() &&
+        contact.name.toLowerCase() === name.toLowerCase() ||
         contact.number.toLowerCase() === number.toLowerCase()
     );
   }
 
   addContact = data => {
     if (this.isDuplicate(data)) {
-      return alert(
-        `Contact with ${data.name} and ${data.number} already in the list`
+      alert(
+        `Contact with name ${data.name} or number ${data.number} already exists.`
       );
+      return;
     }
 
     this.setState(prevState => ({
@@ -66,6 +67,7 @@ class MyPhonebook extends Component {
   };
 
   render() {
+    const { filter } = this.state;
     const contacts = this.getFilteredContacts();
 
     return (
@@ -73,6 +75,7 @@ class MyPhonebook extends Component {
         <h2>Phonebook</h2>
         <PhonebookForm onSubmit={this.addContact} />
         <input
+          value={filter}
           onChange={this.changeFilter}
           name="filter"
           placeholder="Search"
